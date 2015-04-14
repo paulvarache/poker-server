@@ -11,6 +11,7 @@ var watcher = null;
 var turnEnded = false;
 
 function resetTurn() {
+    if (!connected.length) return;
     for (var id in connected) {
         if (!connected[id].reset) return;
         console.log('RESET');
@@ -24,6 +25,7 @@ function resetTurn() {
 }
 
 function showTurn() {
+    if (!connected.length) return;
     for (var id in connected) {
         if (!connected[id].choice) {
             console.log(connected[id].username + " has not choosen");
