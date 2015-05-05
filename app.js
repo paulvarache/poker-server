@@ -10,33 +10,6 @@ var connected = {};
 var watcher = null;
 var turnEnded = false;
 
-function resetTurn() {
-    if (!connected.length) return;
-    for (var id in connected) {
-        if (!connected[id].reset) return;
-        console.log('RESET');
-    }
-    for (var id in connected) {
-        connected[id].choice = null;
-        connected[id].reset = null;
-    }
-    turnEnded = false;
-    io.emit('poker:reset', connected);
-}
-
-function showTurn() {
-    if (!connected.length) return;
-    for (var id in connected) {
-        if (!connected[id].choice) {
-            console.log(connected[id].username + " has not choosen");
-            return;
-        }
-    }
-    console.log('Turn ended');
-    turnEnded = true;
-    io.emit('poker:show', connected);
-}
-
 io.on('connection', function (socket) {
 
     // If self declared as watcher, remove from connected
@@ -66,12 +39,6 @@ io.on('connection', function (socket) {
         console.log("User " + connected[socket.id].username + " chose " + data.choice);
         connected[socket.id].choice = data.choice;
         io.emit('poker:choice', socket.id);
-        showTurn();
-    });
-
-    socket.on('poker:reset', function () {
-        connected[socket.id].reset = true;
-        resetTurn();
     });
 
     socket.on('poker:cancel', function () {
@@ -89,8 +56,21 @@ io.on('connection', function (socket) {
         console.log('User disconnected: ' + JSON.stringify(connected[socket.id]));
         delete connected[socket.id];
         io.emit('poker:user:disconnected', socket.id);
-        resetTurn();
-        showTurn();
+    });
+
+    socket.on('watcher:reset', function () {
+        for (var id in connected) {
+            connected[id].choice = null;
+            connected[id].reset = null;
+        }
+        turnEnded = false;
+        io.emit('poker:reset', connected);
+    });
+
+    socket.on('watcher:show', function () {
+        console.log('Turn ended');
+        turnEnded = true;
+        io.emit('poker:show', connected);
     });
 
     socket.on('error', function (err) {
@@ -98,7 +78,7 @@ io.on('connection', function (socket) {
     });
 });
 
-server.listen(3000, function () {
+server.listen(4000, function () {
     console.log("Server listenning");
 });
 
